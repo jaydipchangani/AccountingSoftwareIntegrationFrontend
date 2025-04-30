@@ -1,0 +1,120 @@
+/* QuickBooksCallback.css */
+.qb-callback-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f0f2f5;
+    padding: 20px;
+  }
+  
+  .qb-callback-card {
+    max-width: 500px;
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+  }
+  
+  .qb-callback-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 24px;
+  }
+  
+  .qb-sync-icon {
+    font-size: 64px;
+    color: #1890ff;
+    margin-bottom: 24px;
+  }
+  
+  .qb-callback-title {
+    margin-bottom: 32px !important;
+    text-align: center;
+    color: #333;
+  }
+  
+  .qb-callback-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .qb-status-text {
+    font-size: 16px;
+    color: #1890ff;
+  }
+  
+  .qb-error-icon {
+    color: #ff4d4f;
+    font-size: 72px;
+  }
+  
+  .qb-retry-button {
+    background-color: #1890ff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    height: 40px;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .qb-retry-button:hover {
+    background-color: #40a9ff;
+  }
+  
+  /* Result component customization */
+  .qb-callback-card .ant-result {
+    padding: 24px 16px;
+  }
+  
+  .qb-callback-card .ant-result-title {
+    font-size: 24px;
+    color: #333;
+  }
+  
+  .qb-callback-card .ant-result-subtitle {
+    font-size: 16px;
+    color: #ff4d4f;
+  }
+  
+  /* Animation for the loading state */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .qb-callback-content {
+    animation: fadeInUp 0.5s ease-out;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 576px) {
+    .qb-callback-card {
+      box-shadow: none;
+    }
+    
+    .qb-callback-content {
+      padding: 24px 16px;
+    }
+    
+    .qb-sync-icon {
+      font-size: 48px;
+    }
+    
+    .qb-callback-title {
+      font-size: 20px;
+      margin-bottom: 24px !important;
+    }
+  }
