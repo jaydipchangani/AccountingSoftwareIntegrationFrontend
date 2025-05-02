@@ -24,7 +24,7 @@ const InvoiceDrawer = ({ visible, onClose, customers, onAddInvoice }: {
     };
 
     try {
-      const response = await fetch('https://localhost:7241/api/InvoiceContoller/add-to-quickbooks', {
+      const response = await fetch('https://localhost:7241/api/Invoice/add-to-quickbooks', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
