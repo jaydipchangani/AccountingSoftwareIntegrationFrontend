@@ -238,11 +238,11 @@ const fetchItemsFromDb = async (page = 1, pageSize = 5) => {
   const handleDelete = async (record: Product) => {
     try {
       if (record.platform === 'QBO') {
-        await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/Products/delete-product/${record.id}`, 
+        await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/Products/${record.id}`, 
           { data: { isActive: false } }
         );
       } else if (record.platform === 'Xero') {
-        await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/Products/xero-delete-product/${record.quickBooksItemId}`);
+        await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/Products/${record.quickBooksItemId}`);
       }
       
       message.success('Product deleted successfully');
@@ -257,7 +257,7 @@ const fetchItemsFromDb = async (page = 1, pageSize = 5) => {
     <div style={{ marginBottom: 16 }}>
       <Select
         style={{ width: 200 }}
-        placeholder="Filter by Type"
+        placeholder="Filter by Type"s
         allowClear
         onChange={(value) => {
           setTypeFilter(value);

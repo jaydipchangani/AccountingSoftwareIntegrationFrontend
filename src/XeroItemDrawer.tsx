@@ -99,14 +99,14 @@ interface XeroItemDrawerProps {
           if (editingRecord) {
             // Update existing item
             await axios.post(
-              `${import.meta.env.VITE_API_BASE_URL}/api/Products/xero-update-product/${editingRecord.quickBooksItemId}`, 
+              `${import.meta.env.VITE_API_BASE_URL}/api/Products/${editingRecord.quickBooksItemId}`, 
               itemData
             );
             message.success('Xero product updated successfully');
           } else {
             // Add new item as array
             await axios.post(
-              `${import.meta.env.VITE_API_BASE_URL}/api/Products/xero-add-product`, 
+              `${import.meta.env.VITE_API_BASE_URL}/api/Products`, 
               [itemData]
             );
             message.success('Xero product added successfully');
