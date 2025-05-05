@@ -36,6 +36,28 @@ const QuickBooksItems: React.FC = () => {
   });
   const [editingRecord, setEditingRecord] = useState<Product | null>(null);
   const [xeroDrawerVisible, setXeroDrawerVisible] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+
+  const fetchFilteredData = async (type: string | null) => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/Products/xero-get-all-products`, {
+        params: {
+          type: type?.toLowerCase() || 'all',
+          page: pagination.current,
+          isTrackedAsInventory: type === 'Inventory' ? true : type === 'Service' ? false : null
+        }
+      });
+      if (response.data) {
+        setTableData(response.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch filtered data:', err);
+      message.error('Failed to fetch filtered data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
 const fetchItemsFromDb = async (page = 1, pageSize = 5) => {
     setLoading(true);
@@ -231,6 +253,23 @@ const fetchItemsFromDb = async (page = 1, pageSize = 5) => {
     }
   };
 
+  const filterSection = (
+    <div style={{ marginBottom: 16 }}>
+      <Select
+        style={{ width: 200 }}
+        placeholder="Filter by Type"
+        allowClear
+        onChange={(value) => {
+          setTypeFilter(value);
+          fetchFilteredData(value);
+        }}
+      >
+        <Select.Option value="Inventory">Inventory</Select.Option>
+        <Select.Option value="Service">Service</Select.Option>
+      </Select>
+    </div>
+  );
+
 
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id'},
@@ -306,9 +345,10 @@ const fetchItemsFromDb = async (page = 1, pageSize = 5) => {
     <Title level={3}>QuickBooks Items</Title>
 
     <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      <div style={{ width: '100%' }}>
-        <SearchBar onSearch={handleSearch} searchTerm={searchTerm} />
-      </div>
+    {/* <div style={{ width: '100%', display: 'flex', gap: '12px' }}>
+          <SearchBar onSearch={handleSearch} searchTerm={searchTerm} />
+          {filterSection}
+        </div> */}
       
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
         <Button

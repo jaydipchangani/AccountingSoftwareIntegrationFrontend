@@ -47,7 +47,7 @@ const App: React.FC = () => {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '0px 20px'
+      padding: '40px 20px'
     }}>
       <div style={{ maxWidth: '1200px', width: '100%', marginBottom: '40px', textAlign: 'center' }}>
         <Title level={1} style={{ fontSize: '2.8rem', color: '#2c3e50', marginBottom: '16px' }}>
@@ -181,10 +181,7 @@ const App: React.FC = () => {
                 src="./image.png"
                 alt="Xero" 
                 style={{ 
-                  height: '40px',
-                  marginBottom: '0px',
-                  objectFit: 'contain',
-                  maxWidth: '100%'
+                  height: '50px'// Makes the logo white
                 }}
               />
             </div>
