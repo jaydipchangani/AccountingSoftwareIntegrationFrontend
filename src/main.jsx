@@ -16,6 +16,9 @@ import BillsTable from './BillsTable';
 import CsvUpload from './CSVUploadPage';
 import XeroLoginButton from './components/XeroLoginButton';
 import XeroLoginPage from './XeroLoginPage';
+import XeroInvoice from './XeroInvoice';
+import EditXeroInvoicePage from './EditXeroInvoice';
+
 
 ReactDOM.createRoot(document.getElementById('root')).render(
     <BrowserRouter>
@@ -39,6 +42,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 
           <Route path="csv" element={<CsvUpload />} />
           <Route path="loginXero" element={<XeroLoginPage />} />
+          <Route path="xero-invoice" element={<XeroInvoice/>} />
+          <Route path="edit-xero-invoice" element={<EditXeroInvoicePage/>} />
 
           <Route path="*" element={<h1>404 Not Found</h1>} />
           
