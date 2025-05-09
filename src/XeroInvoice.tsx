@@ -148,11 +148,16 @@ const XeroInvoicePage = () => {
     setLoading(true);
     try {
       const selectedCustomer = customers.find(c => c.id === values.contactId);
+      // Get the invoice type from URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const invoiceType = urlParams.get('type') || 'ACCREC'; // Default to ACCREC if not specified
+      
       const payload = {
         contactId: selectedCustomer?.contactID || '',
         reference: values.reference,
         date: values.issueDate.format('YYYY-MM-DD'),
         dueDate: values.dueDate.format('YYYY-MM-DD'),
+        type: invoiceType, // Set the type based on URL parameter
         lineItems: items.map(item => ({
           Description: item.description,
           Quantity: item.quantity,
@@ -172,13 +177,13 @@ const XeroInvoicePage = () => {
       });
 
       if (response.ok) {
-        message.success('Invoice created successfully');
-        navigate('/home/invoice');
+        message.success(invoiceType === 'ACCPAY' ? 'Bill created successfully' : 'Invoice created successfully');
+        navigate(invoiceType === 'ACCPAY' ? '/home/bills' : '/home/invoice');
       } else {
-        message.error('Failed to create invoice');
+        message.error(invoiceType === 'ACCPAY' ? 'Failed to create bill' : 'Failed to create invoice');
       }
     } catch (error) {
-      message.error('Error creating invoice');
+      message.error(urlParams.get('type') === 'ACCPAY' ? 'Error creating bill' : 'Error creating invoice');
     } finally {
       setLoading(false);
     }

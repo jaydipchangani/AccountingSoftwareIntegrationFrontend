@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Input, Button, message, Space, Tag, Modal } from 'antd';
+import { Table, Input, Button, message, Space, Tag, Modal, Select } from 'antd';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,22 +9,26 @@ const BillTable: React.FC = () => {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
 
   const fetchData = async (page: number, pageSize: number, search: string) => {
     setLoading(true);
     try {
-      const response = await axios.get('https://localhost:7241/api/bill', {
-        params: { page, pageSize, search },
-      });
-      Modal.success({
-        title: 'Success',
-        content: 'Bills fetched successfully!',
-      });
-      setData(response.data.data);
-      setTotal(response.data.total);
+      // Updated to use the InvoiceController API with ACCPAY filter for bills
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/InvoiceContoller/get-invoices?` + 
+        `pageNumber=${page}&pageSize=${pageSize}&searchTerm=${search}&platform=Xero&invoiceType=ACCPAY`
+      );
+      
+      if (response.ok) {
+        const responseData = await response.json();
+        setData(responseData.invoices || []);
+        setTotal(responseData.totalRecords || 0);
+      } else {
+        throw new Error('Failed to fetch invoices');
+      }
     } catch (error) {
       Modal.error({
         title: 'Error Fetching Bills',
@@ -50,16 +54,25 @@ const BillTable: React.FC = () => {
   const syncBills = async () => {
     setLoading(true);
     try {
-      await axios.get('https://localhost:7241/api/Bill/sync-from-qbo');
-      Modal.success({
-        title: 'Success',
-        content: 'Bills synced successfully from QuickBooks!',
+      // Updated to use Xero API for bills (ACCPAY)
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/XeroInvoice?type=ACCPAY`, {
+        method: 'GET',
       });
-      fetchData(page, pageSize, searchTerm);
+
+      if (response.ok) {
+        const data = await response.json();
+        Modal.success({
+          title: 'Success',
+          content: data.message || 'Xero bills downloaded successfully',
+        });
+        fetchData(page, pageSize, searchTerm);
+      } else {
+        throw new Error('Failed to sync bills');
+      }
     } catch (error) {
       Modal.error({
         title: 'Sync Failed',
-        content: 'Failed to sync bills from QuickBooks.',
+        content: 'Failed to sync bills from Xero.',
       });
     } finally { 
       setLoading(false);
@@ -68,70 +81,151 @@ const BillTable: React.FC = () => {
 
   const navigate = useNavigate();
   const addBills = () => {
-    navigate('/home/add-bill');
+    navigate('/home/xero-invoice?type=ACCPAY');
   };
+  useEffect(() => {
+    const handleFocus = () => {
+
+      fetchData(page, pageSize, searchTerm);
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [page, pageSize, searchTerm]);
 
   useEffect(() => {
     fetchData(page, pageSize, searchTerm);
   }, []);
 
   const columns = [
+    // {
+    //   title: 'Invoice Number',
+    //   dataIndex: 'docNumber',
+    //   key: 'docNumber',
+    // },
     {
-      title: 'QBO Bill ID',
-      dataIndex: 'qboBillId',
-      key: 'qboBillId',
+      title: 'Vendor Name',
+      dataIndex: 'customerName',
+      key: 'customerName',
     },
+    
     {
-      title: 'Vendor',
-      dataIndex: ['vendor', 'displayName'],
-      key: 'vendor',
+      title: 'Status',
+      dataIndex: 'xeroStatus',
+      key: 'xeroStatus',
+      render: (status: string) => (
+        <Tag color={status === 'PAID' ? 'green' : status === 'DRAFT' ? 'blue' : 'red'}>
+          {status || 'N/A'}
+        </Tag>
+      ),
     },
     {
       title: 'Due Date',
       dataIndex: 'dueDate',
       key: 'dueDate',
-      render: (date: string) => date.split('T')[0],
+      render: (date: string) => new Date(date).toLocaleDateString(),
     },
     {
-      title: 'Bill Amount',
+      title: 'Total Amount',
       dataIndex: 'totalAmt',
       key: 'totalAmt',
+      render: (amount: number, record: any) => `${record.xeroCurrencyCode || '$'} ${amount.toFixed(2)}`,
     },
     {
-      title: 'Open Balance',
-      dataIndex: 'balance',
-      key: 'balance',
+      title: 'Created Date',
+      dataIndex: 'txnDate',
+      key: 'txnDate',
+      render: (date: string) => new Date(date).toLocaleDateString(),
     },
     {
-      title: 'Status',
-      key: 'status',
-      render: (_, record) => {
-        return record.balance > 0 ? (
-          <Tag color="red">Not Paid</Tag>
-        ) : (
-          <Tag color="green">Paid</Tag>
-        );
-      },
-    },
+      title: 'Action',
+      key: 'action',
+      render: (_: any, record: any) => (
+        <Space size="middle">
+          <Button 
+            type="link" 
+            danger 
+            onClick={() => handleDelete(record)}
+            disabled={record.xeroStatus !== 'DRAFT'}
+          >
+            Delete
+          </Button>
+          <Button
+            type="link"
+            onClick={() => {
+              navigate('/home/edit-xero-invoice', { 
+                state: { 
+                  invoice: {
+                    id: record.id,
+                    quickBooksId: record.quickBooksId,
+                    customerMemo: record.customerMemo,
+                    date: record.date,
+                    dueDate: record.dueDate,
+                    status: record.status,
+                    totalAmt: record.totalAmt,
+                    lineItems: record.lineItems
+                  }
+                }
+              });
+            }}
+            disabled={record.xeroStatus === 'DELETED'}
+          >
+            Edit
+          </Button>
+        </Space>
+      ),
+    }
   ];
+
+  // Add delete handler
+  const handleDelete = async (invoice: any) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/XeroInvoice/${invoice.quickBooksId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        message.success('Xero bill successfully deleted');
+        fetchData(page, pageSize, searchTerm);
+      } else {
+        const errorData = await response.json();
+        Modal.error({
+          title: 'Delete Failed',
+          content: errorData.message || 'Failed to delete Xero bill',
+        });
+      }
+    } catch (error) {
+      Modal.error({
+        title: 'Error',
+        content: 'An error occurred while deleting the bill',
+      });
+    }
+  };
 
   return (
     <div>
-      <h2>Bill Table</h2>
+      <h2>Bills</h2>
       <Space style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
         <Search
-          placeholder="Search by vendor..."
+          placeholder="Search bills..."
           onSearch={handleSearch}
           enterButton
           allowClear
           style={{ width: 300 }}
         />
-        <Button type="primary" onClick={syncBills} loading={loading}>
-          Sync Bills from QBO
-        </Button>
-        <Button type="primary" onClick={addBills} loading={loading}>
-          + Add Bill 
-        </Button>
+        <div>
+          <Button type="primary" onClick={syncBills} loading={loading} style={{ marginRight: 8 }}>
+            Download From Xero
+          </Button>
+          <Button type="primary" onClick={addBills} loading={loading}>
+            + Add Bill in Xero
+          </Button>
+          <Button type="primary" style={{ backgroundColor: '#52c41a', marginLeft: 8 }} onClick={() => navigate('/home/add-bill')} loading={loading}>
+            + Add Bill in QBO
+          </Button>
+        </div>
       </Space>
       <Table
         columns={columns}

@@ -30,18 +30,22 @@ const InvoicesTable = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null); // Single selected customer
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<string | null>(null);
+  const [invoiceTypeFilter, setInvoiceTypeFilter] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,  // Changed default page size
     total: 0,
     pageSizeOptions: ['10', '20', '50', '100']  // Added size options
   });
-  const fetchInvoices = async (page = 1, pageSize = 10, searchTerm = '', platform = '') => {
+
+
+  const fetchInvoices = async (page = 1, pageSize = 10, searchTerm = '', platform = '', invoiceType = '') => {
     try {
       setLoading(true);
       const response = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/api/InvoiceContoller/get-invoices?` + 
-        `pageNumber=${page}&pageSize=${pageSize}&searchTerm=${searchTerm}&platform=${platform || ''}`
+        `pageNumber=${page}&pageSize=${pageSize}&searchTerm=${searchTerm}` +
+        `&platform=${platform || ''}&invoiceType=ACCREC`
       );
       
       if (response.ok) {
@@ -65,17 +69,24 @@ const InvoicesTable = () => {
 
   const handleGlobalSearch = (value: string) => {
     setSearchText(value);
-    fetchInvoices(1, pagination.pageSize, value, platformFilter || '');
+    fetchInvoices(1, pagination.pageSize, value, platformFilter || '', invoiceTypeFilter || '');
   };
 
   const handlePlatformFilter = (value: string | null) => {
     setPlatformFilter(value);
-    fetchInvoices(1, pagination.pageSize, searchText, value || '');
+    fetchInvoices(1, pagination.pageSize, searchText, value || '', invoiceTypeFilter || '');
   };
 
   useEffect(() => {
     fetchInvoices();
   }, []);
+
+
+  const handleInvoiceTypeFilter = (value: string | null) => {
+    setInvoiceTypeFilter(value);
+    fetchInvoices(1, pagination.pageSize, searchText, platformFilter || '', value || '');
+  };
+
 
   useEffect(() => {
     const fetchCustomers = async () => {
@@ -230,9 +241,10 @@ const InvoicesTable = () => {
 
   const handleXeroDownload = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/XeroInvoice`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/XeroInvoice?type=ACCREC`, {
         method: 'GET',
       });
+      
 
       if (response.ok) {
         const data = await response.json();
@@ -282,6 +294,7 @@ const InvoicesTable = () => {
       ],
       onFilter: (value: string, record: any) => record.platform === value,
     },
+    
     {
       title: 'Status',
       dataIndex: 'xeroStatus',
@@ -376,11 +389,11 @@ const InvoicesTable = () => {
               >
                 Download From Xero
               </Button>
-              {/* <Button type="primary" onClick={() => navigate('/home/add-invoice')}>
-                Add Invoice
-              </Button> */}
+               <Button type="primary" onClick={() => navigate('/home/add-invoice')}>
+                Add Invoice QBO
+              </Button> 
               <Button type="primary" onClick={() => navigate('/home/xero-invoice')}>
-                Add Xero Invoice
+                Add Xero Invoice (ACCREC)
               </Button>
             </Space>
           </Space>
@@ -400,6 +413,15 @@ const InvoicesTable = () => {
               <Select.Option value="Xero">Xero</Select.Option>
               <Select.Option value="QBO">QuickBooks</Select.Option>
             </Select>
+            {/* <Select
+              placeholder="Filter by Invoice Type"
+              style={{ width: 200 }}
+              onChange={handleInvoiceTypeFilter}
+              allowClear
+            >
+              <Select.Option value="ACCREC">Sales (ACCREC)</Select.Option>
+              <Select.Option value="ACCPAY">Bills (ACCPAY)</Select.Option>
+            </Select> */}
           </div>
 
           <InvoiceDrawer
